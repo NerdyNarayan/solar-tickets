@@ -1,5 +1,5 @@
 {
-  "name": "next-template-trpc",
+  "name": "solar-tickets",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -15,6 +15,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@clerk/nextjs": "^5.3.1",
     "@radix-ui/react-icons": "^1.3.0",
     "@t3-oss/env-nextjs": "^0.10.1",
     "@tanstack/react-query": "^5.50.0",
@@ -31,6 +32,7 @@
     "react-dom": "^18.3.1",
     "server-only": "^0.0.1",
     "superjson": "^2.2.1",
+    "svix": "^1.30.0",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.23.3"
