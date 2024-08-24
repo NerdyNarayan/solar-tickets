@@ -1,11 +1,12 @@
 // Example model schema from the Drizzle docs
 // https://orm.drizzle.team/docs/sql-schema-declaration
 
-import { sql } from 'drizzle-orm'
+import { relations, sql } from 'drizzle-orm'
 import {
-  index,
+  pgTable,
   pgTableCreator,
   serial,
+  text,
   timestamp,
   varchar,
 } from 'drizzle-orm/pg-core'
@@ -18,19 +19,33 @@ import {
  */
 export const createTable = pgTableCreator((name) => `${name}`)
 
-export const posts = createTable(
-  'post',
-  {
-    id: serial('id').primaryKey(),
-    name: varchar('name', { length: 256 }),
-    createdAt: timestamp('created_at', { withTimezone: true })
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).$onUpdate(
-      () => new Date(),
-    ),
-  },
-  (example) => ({
-    nameIndex: index('name_idx').on(example.name),
+export const User = pgTable('user', {
+  id: text('id').primaryKey(),
+  name: varchar('name', { length: 256 }).notNull(),
+  createdAt: timestamp('created_at').default(sql`CURRENT_TIMESTAMP`).notNull(),
+  updated: timestamp('updated_at'),
+  image: varchar('image', { length: 256 }).notNull(),
+})
+export const Admin = pgTable('admin', {
+  id: text('id').primaryKey(),
+  createdAt: timestamp('created_at').default(sql`CURRENT_TIMESTAMP`).notNull(),
+  updated: timestamp('updated_at'),
+})
+export const Manager = pgTable('manager', {
+  id: text('id').primaryKey(),
+  createdAt: timestamp('created_at').default(sql`CURRENT_TIMESTAMP`).notNull(),
+  updated: timestamp('updated_at'),
+})
+export const adminRelation = relations(Admin, ({ one }) => ({
+  user: one(User, {
+    fields: [Admin.id],
+    references: [User.id],
   }),
-)
+}))
+
+export const managerRelation = relations(Manager, ({ one }) => ({
+  user: one(User, {
+    fields: [Manager.id],
+    references: [User.id],
+  }),
+}))
