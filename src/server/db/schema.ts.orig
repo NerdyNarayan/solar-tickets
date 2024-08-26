@@ -1,0 +1,165 @@
+// Example model schema from the Drizzle docs
+
+// https://orm.drizzle.team/docs/sql-schema-declaration
+import { relations, sql } from "drizzle-orm";
+import {
+  decimal,
+  integer,
+  pgTable,
+  pgTableCreator,
+  serial,
+  text,
+  timestamp,
+  uniqueIndex,
+  varchar,
+} from "drizzle-orm/pg-core";
+
+export const createTable = pgTableCreator((name) => `${name}`);
+
+export const User = pgTable("user", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  name: varchar("name", { length: 256 }).notNull(),
+  createdAt: timestamp("created_at")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+  updated: timestamp("updated_at"),
+  image: varchar("image", { length: 256 }).notNull(),
+});
+
+export const Admin = pgTable("admin", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  createdAt: timestamp("created_at")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+  updated: timestamp("updated_at"),
+  userId: varchar("userId", { length: 255 }).references(() => User.id),
+});
+
+export const Manager = pgTable("manager", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  createdAt: timestamp("created_at")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+  updated: timestamp("updated_at"),
+  cinemaId: varchar("cinemaId", { length: 255 }).references(() => Cinema.id),
+  userId: varchar("userId", { length: 255 }).references(() => User.id),
+});
+
+export const Cinema = pgTable("cinema", {
+  id: varchar("id").primaryKey(),
+  createdAt: timestamp("created_at")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+  updatedat: timestamp("updated_at"),
+  name: varchar("name", { length: 256 }).notNull(),
+});
+export const Address = pgTable("address", {
+  id: varchar("id").primaryKey(),
+  createdAt: timestamp("created_at")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+  updatedat: timestamp("updated_at"),
+  cinemaId: integer("cinema_id")
+    .unique()
+    .references(() => Cinema.id),
+  address: text("name").notNull(),
+  lat: decimal("lat").notNull(),
+  long: decimal("lng").notNull(),
+});
+export const Screen = pgTable(
+  "screen",
+  {
+    id: serial("id").primaryKey(),
+    createdAt: timestamp("created_at")
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at"),
+    name: text("name").notNull(),
+    number: varchar("number").notNull(),
+    cinemaId: varchar("cinema_id").references(() => Cinema.id),
+    projectionType: varchar("projection_type", { length: 256 }).notNull(),
+    price: decimal("price").default("100.0"),
+  },
+  (screen): any => ({
+    uniqueCinemaNumber: uniqueIndex("unique_cinema_number").on(
+      Screen.cinemaId,
+      Screen.number,
+    ),
+  }),
+);
+export const Seat = pgTable("seat", {
+  row: integer("row").notNull(),
+  column: integer("column").notNull(),
+  screenId: integer("screen_id").references(() => Screen.id),
+});
+
+export const Movie = pgTable("Movie", {
+  id: varchar("id").primaryKey(),
+  createdAt: timestamp("createdAt").defaultNow(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  director: varchar("director", { length: 255 }).notNull(),
+  genre: varchar("genre", { length: 255 }).notNull(),
+  duration: integer("duration").notNull(), // Duration in minutes
+  releaseDate: timestamp("releaseDate").notNull(),
+  posterUrl: varchar("posterUrl", { length: 255 }),
+});
+
+export const showTime = pgTable(
+  "show_time",
+  {
+    id: varchar("id").primaryKey(),
+    createdAt: timestamp("createdAt").defaultNow(),
+    updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+    showTime: timestamp("showTime").notNull(),
+    movieId: varchar("movieId", { length: 255 }).references(() => Movie.id),
+    cinemaId: varchar("cinemaId", { length: 255 }).references(() => Cinema.id),
+  },
+  (screen): any => ({
+    uniqueShowTimeNumber: uniqueIndex("unique_show_time_index").on(
+      showTime.showTime,
+      showTime.cinemaId,
+    ),
+  }),
+);
+export const Booking = pgTable("Booking", {
+  id: serial("id").primaryKey(),
+  createdAt: timestamp("createdAt").defaultNow(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+  showTimeId: varchar("showTimeId").references(() => showTime.id),
+  userId: varchar("userId", { length: 255 }).references(() => User.id),
+  row: integer("row").notNull(),
+  column: integer("column").notNull(),
+  screenId: integer("screen_id").references(() => Screen.id),
+});
+export const Ticket = pgTable("ticket", {
+  id: serial("id").primaryKey(),
+  uid: varchar("uid", { length: 255 }).notNull(),
+  bookingId: integer("bookingId").references(() => Booking.id),
+});
+export const screenRelation = relations(Screen, ({ many }) => ({
+  seats: many(Seat),
+  showTime: many(showTime),
+}));
+
+export const adminRelation = relations(Admin, ({ one }) => ({
+  user: one(User, {
+    fields: [Admin.id],
+    references: [User.id],
+  }),
+}));
+
+export const managerRelation = relations(Manager, ({ one }) => ({
+  user: one(User, {
+    fields: [Manager.id],
+    references: [User.id],
+  }),
+  cinema: one(Cinema, {
+    fields: [Manager.id],
+    references: [Cinema.id],
+  }),
+}));
+export const cinemaRelation = relations(Cinema, ({ one, many }) => ({
+  cinema: many(Manager),
+  address: one(Address),
+}));

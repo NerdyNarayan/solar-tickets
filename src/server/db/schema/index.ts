@@ -1,0 +1,7 @@
+export { default as user, userRelation } from './user'
+export { default as manager, managerRelation } from './manager'
+export { default as admin } from './admin'
+export { default as cinema, cinemaRelations } from './cinema'
+export { default as address, addressRelation } from './address'
+export { default as screen, screenRelation } from './screen'
+export { default as seat, seatRelation } from './seat'
